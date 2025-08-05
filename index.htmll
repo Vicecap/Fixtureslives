@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Live Matches JSON Viewer</title>
+  <style>
+    body {
+      font-family: monospace;
+      background: #121212;
+      color: #e0e0e0;
+      padding: 2em;
+    }
+    h1 { color: #00f0ff; }
+    #output {
+      white-space: pre-wrap;
+      background: #1e1e1e;
+      border: 1px solid #333;
+      padding: 1em;
+      border-radius: 5px;
+      max-height: 90vh;
+      overflow: auto;
+    }
+    .loading { color: #ccc; }
+  </style>
+</head>
+<body>
+  <h1>⚽ Live Matches JSON</h1>
+  <div class="loading">Loading matches from Blogger...</div>
+  <pre id="output"></pre>
+
+  <iframe id="sourceFrame" src="https://vicecaptaine.blogspot.com/p/document.html" style="display:none;"></iframe>
+
+  <script>
+    const output = document.getElementById("output");
+    const loading = document.querySelector(".loading");
+    const iframe = document.getElementById("sourceFrame");
+
+    function tryFetchData(retries = 30) {
+      const interval = setInterval(() => {
+        try {
+          const matches = iframe.contentWindow.exportedMatches;
+          if (Array.isArray(matches)) {
+            clearInterval(interval);
+            loading.remove();
+            output.textContent = JSON.stringify(matches, null, 2);
+          } else if (retries-- <= 0) {
+            clearInterval(interval);
+            output.textContent = '❌ Failed to load match data from Blogger.';
+            loading.textContent = '';
+          }
+        } catch (e) {
+          if (retries-- <= 0) {
+            clearInterval(interval);
+            output.textContent = '❌ Error loading Blogger match data.';
+            loading.textContent = '';
+          }
+        }
+      }, 1000); // Retry every second for ~30 seconds
+    }
+
+    window.addEventListener("DOMContentLoaded", tryFetchData);
+  </script>
+</body>
+</html>
