@@ -1,0 +1,34 @@
+name: Update Matches JSON
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"  # every 10 minutes
+  workflow_dispatch:        # allows manual run
+
+jobs:
+  fetch-and-commit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Install node-fetch
+        run: npm install node-fetch@2
+
+      - name: Create matches.json
+        run: |
+          echo "Fetching data..."
+          node generate-json.js
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add matches.json
+          git commit -m "Auto update matches.json" || echo "No changes"
+          git push
